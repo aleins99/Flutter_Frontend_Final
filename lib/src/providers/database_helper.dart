@@ -112,8 +112,10 @@ class DatabaseHelper {
 
   // CRUD para categorías
   Future<int> insertCategoria(Categoria categoria) async {
-    Database db = await instance.database;
-    return await db.insert(_tableName, categoria.toMap());
+    Database db = await database;
+    var map = categoria.toMap();
+    map.remove('idCategoria'); // Remove the ID so SQLite can auto-generate it
+    return await db.insert(_tableName, map);
   }
 
   Future<List<Categoria>> retrieveCategorias() async {
