@@ -302,13 +302,13 @@ class DatabaseHelper {
     Database db = await instance.database;
     final List<Map<String, dynamic>> maps = await db.query(_tableVentas);
     List<Venta> ventas = [];
-
     for (var venta in maps) {
+      double total = await totalVenta(venta['idVenta'] as int);
       Venta v = Venta(
         idVenta: venta['idVenta'] as int,
         fecha: DateTime.tryParse(venta['fecha'] as String)!,
         factura: venta['factura'] as String,
-        total: await totalVenta(venta['idVenta'] as int),
+        total: total,
       );
       ventas.add(v);
     }
@@ -348,6 +348,8 @@ class DatabaseHelper {
 
   Future<int> updateVenta(Venta venta) async {
     Database db = await instance.database;
+    double newTotal = await totalVenta(venta.idVenta);
+    venta.total = newTotal;
     return await db.update(
       _tableVentas,
       venta.toMap(),
@@ -373,6 +375,7 @@ class DatabaseHelper {
     map['idVentaDetalle'] = detalleVenta.idVentaDetalle.idVenta;
     map.remove(
         'idDetalleVenta'); // Remove the ID so SQLite can auto-generate it
+    updateVenta(detalleVenta.idVentaDetalle);
     return await db.insert(_tableDetalleVenta, map);
   }
 

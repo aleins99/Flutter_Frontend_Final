@@ -1,7 +1,13 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 import '../models/detalle_venta.dart';
 import '../models/producto.dart';
 import '../models/venta.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
 
 import '../providers/database_helper.dart';
 
@@ -56,23 +62,6 @@ class _DetalleVentaScreenState extends State<DetalleVentaScreen> {
             padding: const EdgeInsets.all(8.0),
             child: Column(
               children: [
-                DropdownButton<Venta>(
-                  value: selectedVenta,
-                  hint: Text("Seleccione un Producto"),
-                  onChanged: (Venta? newValue) {
-                    setState(() {
-                      selectedVenta = newValue;
-                    });
-                  },
-                  items: ventas.map<DropdownMenuItem<Venta>>((Venta venta) {
-                    return DropdownMenuItem<Venta>(
-                      value: venta,
-                      child: Text(
-                        '${venta.fecha} ${venta.total}',
-                      ),
-                    );
-                  }).toList(),
-                ),
                 DropdownButton<Producto>(
                   value: selectedProducto,
                   hint: Text("Seleccione un Producto"),
@@ -103,6 +92,11 @@ class _DetalleVentaScreenState extends State<DetalleVentaScreen> {
                       onPressed: _addDetalleVenta,
                       child: const Text('Agregar'),
                     ),
+                    ElevatedButton(
+                        onPressed: _exportToPdf,
+                        child: const Text(
+                          'Exportar a PDF',
+                        ))
                   ],
                 ),
               ],
@@ -136,6 +130,53 @@ class _DetalleVentaScreenState extends State<DetalleVentaScreen> {
         ],
       ),
     );
+  }
+
+  void _exportToPdf() async {
+    final pdf = pw.Document();
+    final fontData = await rootBundle.load("assets/fonts/OpenSans-Regular.ttf");
+    final ttf = pw.Font.ttf(fontData.buffer.asByteData());
+    pdf.addPage(
+      pw.MultiPage(
+        theme: pw.ThemeData.withFont(
+          base: ttf,
+          bold: ttf,
+          italic: ttf,
+          boldItalic: ttf,
+        ),
+        build: (context) => [
+          pw.Table.fromTextArray(
+            context: context,
+            data: <List<String>>[
+              [
+                'Fecha',
+                'Total',
+                'idVenta',
+                'Producto',
+                'Categoría Producto',
+                'Cantidad'
+              ],
+              ...detalleVenta.map((detalle) => [
+                    '${detalle.idVentaDetalle.fecha}',
+                    '${detalle.idVentaDetalle.total}',
+                    '${detalle.idVentaDetalle.idVenta}',
+                    '${detalle.idProductoDetalle.nombre} ${detalle.idProductoDetalle.precio}',
+                    detalle.idProductoDetalle.categoria.nombre,
+                    '${detalle.cantidadDetalle}',
+                  ]),
+            ],
+          ),
+        ],
+      ),
+    );
+    final output = await _localPath;
+    final file = File("$output/ventas.pdf");
+    await file.writeAsBytes(await pdf.save());
+  }
+
+  Future<String> get _localPath async {
+    final directory = await getApplicationDocumentsDirectory();
+    return directory.path;
   }
 
   void _addDetalleVenta() async {
