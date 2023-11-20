@@ -73,7 +73,8 @@ class DatabaseHelper {
     $columnNombreProducto TEXT NOT NULL,
     $columnPrecioProducto REAL NOT NULL,
     $columnCategoriaProducto INTEGER NOT NULL,
-    $columnCodigoProducto TEXT NOT NULL
+    $columnCodigoProducto TEXT NOT NULL,
+    FOREIGN KEY($columnCategoriaProducto) REFERENCES $_tableName($columnId)
     )
     ''');
     await db.execute('''
@@ -149,12 +150,40 @@ class DatabaseHelper {
   }
 
   //CRUD para productos
-  Future<int> insertProducto(Producto producto) async {
-    Database db = await instance.database;
-    return await db.insert(_tableProductos, producto.toMap());
+  /*Future<int> insertProducto(Producto producto) async {
+    Database db = await database;
+    var map = producto.toMap();
+    map.remove('idProducto'); // Remove the ID so SQLite can auto-generate it
+    return await db.insert(_tableProductos, map);
+  }*/
+
+    Future<int> insertProducto(Producto producto) async {
+    Database db = await database;
+    var map = {
+      'nombre': producto.nombre,
+      'precio': producto.precio,
+      'categoria': producto.categoria.idCategoria,
+      'codigo': producto.codigo,
+    };
+    return await db.insert(_tableProductos, map); // Cambiado de 'FichaClinica' a '_tableFichaClinica'
+  }
+  
+  Future<Categoria> obtenerCategoriaPorId(int id) async {
+    Database db = await database;
+    final res = await db.query(
+      _tableName,
+      where: '$columnId = ?',
+      whereArgs: [id],
+    );
+
+    if (res.isNotEmpty) {
+      return Categoria.fromMap(res.first);
+    } else {
+      throw Exception('Categoría no encontrada');
+    }
   }
 
-  Future<List<Producto>> retrieveProductos() async {
+  /*Future<List<Producto>> retrieveProductos() async {
     Database db = await instance.database;
     final List<Map<String, dynamic>> maps = await db.query(_tableProductos);
     return List.generate(maps.length, (i) {
@@ -166,6 +195,23 @@ class DatabaseHelper {
         codigo: maps[i][columnCodigoProducto],
       );
     });
+  }*/
+
+  Future<List<Producto>> retrieveProductos() async {
+    Database db = await database;
+    final res = await db.query(
+        _tableProductos); // Asegúrate de que _tableFichaClinica es el nombre correcto de tu tabla
+    List<Producto> listaProductos = [];
+
+    for (var fichaMap in res) {
+      Categoria categoria =
+          await obtenerCategoriaPorId(fichaMap[columnCategoriaProducto] as int);
+
+      Producto producto = Producto.fromMap(fichaMap,categoria: categoria);
+      listaProductos.add(producto);
+    }
+
+    return listaProductos;
   }
 
   Future<int> updateProducto(Producto producto) async {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_frontend_final/src/screens/productos_screen.dart';
 
 import '../src/screens/categoria_screen.dart';
 
@@ -35,6 +36,17 @@ class HomeScreen extends StatelessWidget {
                 onPressed: () {
                   Navigator.of(context).push(MaterialPageRoute(
                     builder: (context) => CategoriaScreen(),
+                  ));
+                },
+              ),
+            ),
+            SizedBox(
+              width: 200, // Ancho fijo para todos los botones
+              child: ElevatedButton(
+                child: Text('Administrar Productos'),
+                onPressed: () {
+                  Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) => ProductosScreen(),
                   ));
                 },
               ),

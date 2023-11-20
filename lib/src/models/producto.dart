@@ -8,11 +8,13 @@
   static const columnCodigoProducto = 'codigo';
 
 */
+import 'package:flutter_frontend_final/src/models/categoria.dart';
+
 class Producto {
   int idProducto;
   String nombre;
   double precio;
-  int categoria;
+  Categoria categoria;
   String codigo;
 
   Producto(
@@ -34,12 +36,12 @@ class Producto {
   }
 
   // Convert a Map into a Producto. The keys must correspond to the names of the columns in the database.
-  factory Producto.fromMap(Map<String, dynamic> map) {
+  factory Producto.fromMap(Map<String, dynamic> map,{required Categoria categoria}) {
     return Producto(
       idProducto: map['idProducto'],
       nombre: map['nombre'],
       precio: map['precio'],
-      categoria: map['categoria'],
+      categoria: categoria,
       codigo: map['codigo'],
     );
   }
