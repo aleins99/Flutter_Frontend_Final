@@ -4,25 +4,28 @@
   static const columnIdProductoDetalleVenta = 'idProducto';
   static const columnCantidadDetalleVenta = 'cantidad';
 */
+import '../models/producto.dart';
+import '../models/venta.dart';
+
 class DetalleVenta {
   int idDetalleVenta;
-  int idVenta;
-  int idProducto;
+  Producto producto;
   int cantidad;
+  Venta venta;
 
   DetalleVenta(
       {required this.idDetalleVenta,
-      required this.idVenta,
-      required this.idProducto,
-      required this.cantidad});
+      required this.producto,
+      required this.cantidad,
+      required this.venta});
 
   // Convert a DetalleVenta into a Map. The keys must correspond to the names of the columns in the database.
   Map<String, dynamic> toMap() {
     return {
       'idDetalleVenta': idDetalleVenta,
-      'idVenta': idVenta,
-      'idProducto': idProducto,
+      'producto': producto,
       'cantidad': cantidad,
+      'venta': venta,
     };
   }
 
@@ -30,9 +33,9 @@ class DetalleVenta {
   factory DetalleVenta.fromMap(Map<String, dynamic> map) {
     return DetalleVenta(
       idDetalleVenta: map['idDetalleVenta'],
-      idVenta: map['idVenta'],
-      idProducto: map['idProducto'],
+      producto: map['producto'],
       cantidad: map['cantidad'],
+      venta: map['venta'],
     );
   }
 }
