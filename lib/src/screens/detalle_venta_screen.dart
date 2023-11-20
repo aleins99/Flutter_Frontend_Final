@@ -22,7 +22,8 @@ class _DetalleVentaScreenState extends State<DetalleVentaScreen> {
   Producto? selectedProducto;
   List<Venta> ventas = [];
   Venta? selectedVenta;
-  TextEditingController _controllerCantidad = new TextEditingController();
+  TextEditingController _controllercantidadDetalle =
+      new TextEditingController();
 
   @override
   void initState() {
@@ -91,8 +92,9 @@ class _DetalleVentaScreenState extends State<DetalleVentaScreen> {
                   }).toList(),
                 ),
                 TextField(
-                  controller: _controllerCantidad,
-                  decoration: const InputDecoration(labelText: 'Cantidad'),
+                  controller: _controllercantidadDetalle,
+                  decoration:
+                      const InputDecoration(labelText: 'cantidadDetalle'),
                   keyboardType: TextInputType.number,
                 ),
                 Row(
@@ -112,7 +114,7 @@ class _DetalleVentaScreenState extends State<DetalleVentaScreen> {
               itemBuilder: (context, index) {
                 return ListTile(
                   title: Text(
-                      '${detalleVenta[index].idProducto.nombre} ${detalleVenta[index].cantidad}'),
+                      '${detalleVenta[index].idProductoDetalle.nombre} ${detalleVenta[index].cantidadDetalle}'),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -137,15 +139,16 @@ class _DetalleVentaScreenState extends State<DetalleVentaScreen> {
   }
 
   void _addDetalleVenta() async {
-    if (_controllerCantidad.text.isNotEmpty && selectedProducto != null) {
+    if (_controllercantidadDetalle.text.isNotEmpty &&
+        selectedProducto != null) {
       DetalleVenta newDetalleVenta = DetalleVenta(
-          idDetalleVenta: 1, // id 0 porque SQLite lo autoincrementará
-          idVenta: widget.getVenta(),
-          idProducto: selectedProducto!,
-          cantidad: int.parse(_controllerCantidad.text));
+          idDetalleVenta: 0, // id 0 porque SQLite lo autoincrementará
+          idVentaDetalle: widget.getVenta(),
+          idProductoDetalle: selectedProducto!,
+          cantidadDetalle: int.parse(_controllercantidadDetalle.text));
       await DatabaseHelper.instance.insertDetalleVenta(newDetalleVenta);
       _loaddetalleVenta(widget.getVenta());
-      _controllerCantidad.clear();
+      _controllercantidadDetalle.clear();
     }
   }
 
@@ -155,8 +158,9 @@ class _DetalleVentaScreenState extends State<DetalleVentaScreen> {
   }
 
   void _editDetalleVenta(int index) async {
-    _controllerCantidad.text = detalleVenta[index].cantidad.toString();
-    selectedProducto = detalleVenta[index].idProducto;
+    _controllercantidadDetalle.text =
+        detalleVenta[index].cantidadDetalle.toString();
+    selectedProducto = detalleVenta[index].idProductoDetalle;
 
     await showDialog(
       context: context,
@@ -167,9 +171,9 @@ class _DetalleVentaScreenState extends State<DetalleVentaScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
-                controller: _controllerCantidad,
+                controller: _controllercantidadDetalle,
                 decoration: const InputDecoration(
-                  labelText: 'Cantidad',
+                  labelText: 'cantidadDetalle',
                 ),
                 keyboardType: TextInputType.number,
               ),
@@ -202,14 +206,15 @@ class _DetalleVentaScreenState extends State<DetalleVentaScreen> {
               onPressed: () async {
                 DetalleVenta updatedDetalleVenta = DetalleVenta(
                     idDetalleVenta: detalleVenta[index].idDetalleVenta,
-                    idVenta: detalleVenta[index].idVenta,
-                    idProducto: selectedProducto!,
-                    cantidad: int.parse(_controllerCantidad.text));
+                    idVentaDetalle: detalleVenta[index].idVentaDetalle,
+                    idProductoDetalle: selectedProducto!,
+                    cantidadDetalle:
+                        int.parse(_controllercantidadDetalle.text));
                 await DatabaseHelper.instance
                     .updateDetalleVenta(updatedDetalleVenta);
                 _loaddetalleVenta(widget.getVenta());
                 Navigator.pop(context);
-                _controllerCantidad.clear();
+                _controllercantidadDetalle.clear();
                 selectedProducto = null;
               },
               child: const Text('Actualizar'),

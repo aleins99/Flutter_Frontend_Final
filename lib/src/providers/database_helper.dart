@@ -41,9 +41,9 @@ class DatabaseHelper {
   // para detalle venta: identificador del producto, cantidad
   static const _tableDetalleVenta = 'detalleVenta';
   static const columnIdDetalleVenta = 'idDetalleVenta';
-  static const columnVenta = 'idVenta';
-  static const columnProducto = 'idProducto';
-  static const columnCantidad = 'cantidad';
+  static const columnVentaDetalleVenta = 'idVentaDetalle';
+  static const columnProductoDetalleVenta = 'idProductoDetalle';
+  static const columnCantidadDetalleVenta = 'cantidadDetalle';
 
   DatabaseHelper._privateConstructor();
   static final DatabaseHelper instance = DatabaseHelper._privateConstructor();
@@ -98,11 +98,11 @@ class DatabaseHelper {
     await db.execute('''
     CREATE TABLE $_tableDetalleVenta (
     $columnIdDetalleVenta INTEGER PRIMARY KEY AUTOINCREMENT,
-    $columnVenta INTEGER NOT NULL,
-    $columnProducto INTEGER NOT NULL,
-    $columnCantidad INTEGER NOT NULL,
-    FOREIGN KEY ($columnVenta) REFERENCES $_tableVentas ($columnIdVenta),
-    FOREIGN KEY ($columnProducto) REFERENCES $_tableProductos ($columnIdProducto)
+    $columnVentaDetalleVenta INTEGER NOT NULL,
+    $columnProductoDetalleVenta INTEGER NOT NULL,
+    $columnCantidadDetalleVenta INTEGER NOT NULL,
+    FOREIGN KEY ($columnVentaDetalleVenta) REFERENCES $_tableVentas ($columnIdVenta),
+    FOREIGN KEY ($columnProductoDetalleVenta) REFERENCES $_tableProductos ($columnIdProducto)
     )
     ''');
   }
@@ -211,6 +211,23 @@ class DatabaseHelper {
     return listaProductos;
   }
 
+  Future<Producto> obtenerProductoPorId(int id) async {
+    Database db = await database;
+    final res = await db.query(
+      _tableProductos,
+      where: '$columnIdProducto = ?',
+      whereArgs: [id],
+    );
+
+    if (res.isNotEmpty) {
+      Categoria cat =
+          await obtenerCategoriaPorId(res.first['categoria'] as int);
+      return Producto.fromMap(res.first, categoria: cat);
+    } else {
+      throw Exception('Venta no encontrada');
+    }
+  }
+
   Future<int> updateProducto(Producto producto) async {
     Database db = await instance.database;
     return await db.update(
@@ -285,16 +302,48 @@ class DatabaseHelper {
     Database db = await instance.database;
     final List<Map<String, dynamic>> maps = await db.query(_tableVentas);
     List<Venta> ventas = [];
+
     for (var venta in maps) {
       Venta v = Venta(
         idVenta: venta['idVenta'] as int,
         fecha: DateTime.tryParse(venta['fecha'] as String)!,
         factura: venta['factura'] as String,
-        total: venta['total'] as double,
+        total: await totalVenta(venta['idVenta'] as int),
       );
       ventas.add(v);
     }
     return ventas;
+  }
+
+  Future<double> totalVenta(int idVenta) async {
+    final db = await database;
+    final res = await db.query(
+      _tableDetalleVenta,
+      where: '$columnVentaDetalleVenta = ?',
+      whereArgs: [idVenta],
+    );
+    double total = 0.0;
+    for (var detalle in res) {
+      Producto producto =
+          await obtenerProductoPorId(detalle['idProductoDetalle'] as int);
+      total += producto.precio * (detalle['cantidadDetalle'] as int);
+    }
+    return total;
+  }
+
+  Future<Venta> obtenerVentaPorId(int id) async {
+    Database db = await database;
+    final res = await db.query(
+      _tableVentas,
+      where: '$columnIdVenta = ?',
+      whereArgs: [id],
+    );
+
+    if (res.isNotEmpty) {
+      return Venta.fromMap(res.first);
+    } else {
+      throw Exception('Venta no encontrada');
+    }
   }
 
   Future<int> updateVenta(Venta venta) async {
@@ -320,9 +369,10 @@ class DatabaseHelper {
   Future<int> insertDetalleVenta(DetalleVenta detalleVenta) async {
     Database db = await database;
     var map = detalleVenta.toMap();
-    map['idProducto'] = detalleVenta.idProducto.idProducto;
-    map['idVenta'] = detalleVenta.idVenta.idVenta;
-
+    map['idProductoDetalle'] = detalleVenta.idProductoDetalle.idProducto;
+    map['idVentaDetalle'] = detalleVenta.idVentaDetalle.idVenta;
+    map.remove(
+        'idDetalleVenta'); // Remove the ID so SQLite can auto-generate it
     return await db.insert(_tableDetalleVenta, map);
   }
 
@@ -332,9 +382,9 @@ class DatabaseHelper {
     return List.generate(maps.length, (i) {
       return DetalleVenta(
         idDetalleVenta: maps[i][columnIdDetalleVenta],
-        idVenta: maps[i][columnVenta],
-        idProducto: maps[i][columnProducto],
-        cantidad: maps[i][columnCantidad],
+        idVentaDetalle: maps[i][columnVentaDetalleVenta],
+        idProductoDetalle: maps[i][columnProductoDetalleVenta],
+        cantidadDetalle: maps[i][columnCantidadDetalleVenta],
       );
     });
   }
@@ -351,20 +401,26 @@ class DatabaseHelper {
 
   Future<List<DetalleVenta>> retrieveDetallesVenta(int idVenta) async {
     final db = await database;
-    final List<Map<String, dynamic>> detalleVentaMap = await db.query(
-      'DetalleVenta',
-      where: '$columnVenta = ?',
+    final res = await db.query(
+      _tableDetalleVenta,
+      where: '$columnVentaDetalleVenta = ?',
       whereArgs: [idVenta],
     );
+    List<DetalleVenta> detallesVenta = [];
 
-    return detalleVentaMap.map((detalleMap) {
-      return DetalleVenta(
-        idDetalleVenta: detalleMap['idDetalleVenta'],
-        idVenta: detalleMap['idVenta'],
-        idProducto: detalleMap['idProducto'],
-        cantidad: detalleMap['cantidad'],
+    for (var detalle in res) {
+      Venta venta = await obtenerVentaPorId(detalle['idVentaDetalle'] as int);
+      Producto producto =
+          await obtenerProductoPorId(detalle['idProductoDetalle'] as int);
+      DetalleVenta d = DetalleVenta(
+        idDetalleVenta: detalle['idDetalleVenta'] as int,
+        idVentaDetalle: venta,
+        idProductoDetalle: producto,
+        cantidadDetalle: detalle['cantidadDetalle'] as int,
       );
-    }).toList();
+      detallesVenta.add(d);
+    }
+    return detallesVenta;
   }
 
   Future<int> deleteDetalleVenta(int id) async {

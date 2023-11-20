@@ -75,7 +75,7 @@ class _VentaScreenState extends State<VentaScreen> {
                   },
                   child: ListTile(
                     title: Text(
-                      '${DateFormat('yyyy/MM/dd').format(ventas[index].fecha)} - ${ventas[index].total}',
+                      '${DateFormat('yyyy/MM/dd').format(ventas[index].fecha)} - ${ventas[index].total.toStringAsFixed(0)}',
                     ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
