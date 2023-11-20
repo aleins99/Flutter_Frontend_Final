@@ -1,31 +1,32 @@
-/* // para detalle venta: identificador del producto, cantidad
+/* // para detalle venta: identificador del producto, cantidadVenta
   static const _tableDetalleVenta = 'detalleVenta';
   static const columnIdDetalleVenta = 'idDetalleVenta';
   static const columnIdProductoDetalleVenta = 'idProducto';
-  static const columnCantidadDetalleVenta = 'cantidad';
+  static const columncantidadVentaDetalleVenta = 'cantidadVenta';
 */
 import '../models/producto.dart';
 import '../models/venta.dart';
 
 class DetalleVenta {
   int idDetalleVenta;
-  Producto producto;
+  Producto idProducto;
   int cantidad;
-  Venta venta;
+  Venta idVenta;
 
-  DetalleVenta(
-      {required this.idDetalleVenta,
-      required this.producto,
-      required this.cantidad,
-      required this.venta});
+  DetalleVenta({
+    required this.idDetalleVenta,
+    required this.idVenta,
+    required this.idProducto,
+    required this.cantidad,
+  });
 
   // Convert a DetalleVenta into a Map. The keys must correspond to the names of the columns in the database.
   Map<String, dynamic> toMap() {
     return {
       'idDetalleVenta': idDetalleVenta,
-      'producto': producto,
+      'idVenta': idVenta,
+      'idProducto': idProducto,
       'cantidad': cantidad,
-      'venta': venta,
     };
   }
 
@@ -33,9 +34,9 @@ class DetalleVenta {
   factory DetalleVenta.fromMap(Map<String, dynamic> map) {
     return DetalleVenta(
       idDetalleVenta: map['idDetalleVenta'],
-      producto: map['producto'],
+      idVenta: map['idVenta'],
+      idProducto: map['idProducto'],
       cantidad: map['cantidad'],
-      venta: map['venta'],
     );
   }
 }

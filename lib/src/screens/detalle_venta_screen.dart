@@ -6,8 +6,14 @@ import '../models/venta.dart';
 import '../providers/database_helper.dart';
 
 class DetalleVentaScreen extends StatefulWidget {
+  final Venta venta;
+  const DetalleVentaScreen({super.key, required this.venta});
   @override
+  // ignore: library_private_types_in_public_api
   _DetalleVentaScreenState createState() => _DetalleVentaScreenState();
+  Venta getVenta() {
+    return venta;
+  }
 }
 
 class _DetalleVentaScreenState extends State<DetalleVentaScreen> {
@@ -21,11 +27,21 @@ class _DetalleVentaScreenState extends State<DetalleVentaScreen> {
   @override
   void initState() {
     super.initState();
-    _loaddetalleVenta();
+    _loaddetalleVenta(widget.getVenta());
+    _loadProductos();
   }
 
-  void _loaddetalleVenta() async {
-    detalleVenta = await DatabaseHelper.instance.retrieveDetalleVentas();
+  void _loaddetalleVenta(Venta venta) async {
+    print("ventaaaa :${venta.idVenta}");
+    detalleVenta =
+        await DatabaseHelper.instance.retrieveDetallesVenta(venta.idVenta);
+    setState(() {});
+  }
+
+  void _loadProductos() async {
+    productos = await DatabaseHelper.instance.retrieveProductos();
+    print("Reservas cargadas: $productos");
+
     setState(() {});
   }
 
@@ -41,7 +57,7 @@ class _DetalleVentaScreenState extends State<DetalleVentaScreen> {
               children: [
                 DropdownButton<Venta>(
                   value: selectedVenta,
-                  hint: Text("Seleccione la venta"),
+                  hint: Text("Seleccione un Producto"),
                   onChanged: (Venta? newValue) {
                     setState(() {
                       selectedVenta = newValue;
@@ -96,7 +112,7 @@ class _DetalleVentaScreenState extends State<DetalleVentaScreen> {
               itemBuilder: (context, index) {
                 return ListTile(
                   title: Text(
-                      '${detalleVenta[index].producto.nombre} ${detalleVenta[index].cantidad}'),
+                      '${detalleVenta[index].idProducto.nombre} ${detalleVenta[index].cantidad}'),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -123,24 +139,24 @@ class _DetalleVentaScreenState extends State<DetalleVentaScreen> {
   void _addDetalleVenta() async {
     if (_controllerCantidad.text.isNotEmpty && selectedProducto != null) {
       DetalleVenta newDetalleVenta = DetalleVenta(
-          idDetalleVenta: 0, // id 0 porque SQLite lo autoincrementará
-          venta: selectedVenta!,
-          producto: selectedProducto!,
+          idDetalleVenta: 1, // id 0 porque SQLite lo autoincrementará
+          idVenta: widget.getVenta(),
+          idProducto: selectedProducto!,
           cantidad: int.parse(_controllerCantidad.text));
       await DatabaseHelper.instance.insertDetalleVenta(newDetalleVenta);
-      _loaddetalleVenta();
+      _loaddetalleVenta(widget.getVenta());
       _controllerCantidad.clear();
     }
   }
 
   void _deleteDetalleVenta(int id) async {
     await DatabaseHelper.instance.deleteDetalleVenta(id);
-    _loaddetalleVenta();
+    _loaddetalleVenta(widget.getVenta());
   }
 
   void _editDetalleVenta(int index) async {
     _controllerCantidad.text = detalleVenta[index].cantidad.toString();
-    selectedProducto = detalleVenta[index].producto;
+    selectedProducto = detalleVenta[index].idProducto;
 
     await showDialog(
       context: context,
@@ -186,12 +202,12 @@ class _DetalleVentaScreenState extends State<DetalleVentaScreen> {
               onPressed: () async {
                 DetalleVenta updatedDetalleVenta = DetalleVenta(
                     idDetalleVenta: detalleVenta[index].idDetalleVenta,
-                    venta: detalleVenta[index].venta,
-                    producto: selectedProducto!,
+                    idVenta: detalleVenta[index].idVenta,
+                    idProducto: selectedProducto!,
                     cantidad: int.parse(_controllerCantidad.text));
                 await DatabaseHelper.instance
                     .updateDetalleVenta(updatedDetalleVenta);
-                _loaddetalleVenta();
+                _loaddetalleVenta(widget.getVenta());
                 Navigator.pop(context);
                 _controllerCantidad.clear();
                 selectedProducto = null;

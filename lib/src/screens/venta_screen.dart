@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_frontend_final/src/screens/detalle_venta_screen.dart';
 import '../models/venta.dart';
 import '../providers/database_helper.dart';
 import '../models/detalle_venta.dart';
+import 'package:intl/intl.dart';
 
 class VentaScreen extends StatefulWidget {
   @override
@@ -61,20 +63,33 @@ class _VentaScreenState extends State<VentaScreen> {
             child: ListView.builder(
               itemCount: ventas.length,
               itemBuilder: (context, index) {
-                return ListTile(
-                  title: Text('${ventas[index].factura}'),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.edit),
-                        onPressed: () => _editVenta(index),
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.delete),
-                        onPressed: () => _deleteVenta(ventas[index].idVenta),
-                      ),
-                    ],
+                return GestureDetector(
+                  onTap: () {
+                    // Código para navegar a la pantalla de detalles de la venta
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              DetalleVentaScreen(venta: ventas[index])),
+                    );
+                  },
+                  child: ListTile(
+                    title: Text(
+                      '${DateFormat('yyyy/MM/dd').format(ventas[index].fecha)} - ${ventas[index].total}',
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: Icon(Icons.edit),
+                          onPressed: () => _editVenta(index),
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.delete),
+                          onPressed: () => _deleteVenta(ventas[index].idVenta),
+                        ),
+                      ],
+                    ),
                   ),
                 );
               },
