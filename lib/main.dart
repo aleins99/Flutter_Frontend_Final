@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_frontend_final/src/models/detalle_venta.dart';
+import 'package:flutter_frontend_final/src/screens/detalle_venta_screen.dart';
+import 'package:flutter_frontend_final/src/screens/venta_screen.dart';
 
 import '../src/screens/categoria_screen.dart';
+import '../src/screens/cliente_screen.dart';
 
 void main() => runApp(MyApp());
 
@@ -35,6 +39,42 @@ class HomeScreen extends StatelessWidget {
                 onPressed: () {
                   Navigator.of(context).push(MaterialPageRoute(
                     builder: (context) => CategoriaScreen(),
+                  ));
+                },
+              ),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: 200, // Ancho fijo para todos los botones
+              child: ElevatedButton(
+                child: Text('Administrar Clientes'),
+                onPressed: () {
+                  Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) => ClienteScreen(),
+                  ));
+                },
+              ),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: 200, // Ancho fijo para todos los botones
+              child: ElevatedButton(
+                child: Text('Administrar Ventas'),
+                onPressed: () {
+                  Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) => VentaScreen(),
+                  ));
+                },
+              ),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: 200, // Ancho fijo para todos los botones
+              child: ElevatedButton(
+                child: Text('Administrar Detalle Venta'),
+                onPressed: () {
+                  Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) => VentaScreen(),
                   ));
                 },
               ),
